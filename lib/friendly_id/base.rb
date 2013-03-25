@@ -212,9 +212,13 @@ often better and easier to use {FriendlyId::Slugged slugs}.
     # Gets an instance of an anonymous subclass of ActiveRecord::Relation.
     # @see #relation_class
     def relation
-      @relation = nil unless @relation.class <= relation_class
-      @relation ||= relation_class.new(self, arel_table)
-      super
+      relation = relation_class.new(self, arel_table)
+
+      if finder_needs_type_condition?
+        relation.where(type_condition).create_with(inheritance_column.to_sym => sti_name)
+      else
+        relation
+      end
     end
 
     # Gets an anonymous subclass of the model's relation class.
